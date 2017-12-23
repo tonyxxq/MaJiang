@@ -58,6 +58,9 @@ bool MaJiangScene::init() {
         hostPlayer.mopai(majiang);
     }
 
+    auto majiang = allMaJiang.consume();//host 14张牌
+    hostPlayer.mopai(majiang);
+
     oppoPlayer.sort();
     hostPlayer.sort();
 
@@ -71,6 +74,7 @@ bool MaJiangScene::init() {
                                                 CC_CALLBACK_1(MaJiangScene::peng, this));
     peng->setAnchorPoint(Vec2::ZERO);
     peng->setPosition(Vec2(0, 0));
+    peng->setVisible(false);
     peng->setEnabled(false);
     peng->setTag(MenuItemTag::PENG);
 
@@ -78,6 +82,7 @@ bool MaJiangScene::init() {
                                                 CC_CALLBACK_1(MaJiangScene::gang, this));
     gang->setAnchorPoint(Vec2::ZERO);
     gang->setPosition(Vec2(45, 0));
+    gang->setVisible(false);
     gang->setEnabled(false);
     gang->setTag(MenuItemTag::GANG);
 
@@ -85,6 +90,7 @@ bool MaJiangScene::init() {
                                               CC_CALLBACK_1(MaJiangScene::hu, this));
     hu->setAnchorPoint(Vec2::ZERO);
     hu->setPosition(Vec2(90, 0));
+    hu->setVisible(false);
     hu->setEnabled(false);
     hu->setTag(MenuItemTag::HU);
 
@@ -92,6 +98,7 @@ bool MaJiangScene::init() {
                                                CC_CALLBACK_1(MaJiangScene::chi, this));
     chi->setAnchorPoint(Vec2::ZERO);
     chi->setPosition(Vec2(135, 0));
+    chi->setVisible(false);
     chi->setEnabled(false);
     chi->setTag(MenuItemTag::CHI);
 
@@ -99,6 +106,7 @@ bool MaJiangScene::init() {
                                                CC_CALLBACK_1(MaJiangScene::guo, this));
     guo->setAnchorPoint(Vec2::ZERO);
     guo->setPosition(Vec2(180, 0));
+    guo->setVisible(false);
     guo->setEnabled(false);
     guo->setTag(MenuItemTag::GUO);
 
@@ -157,37 +165,37 @@ void MaJiangScene::onEnter() {
             }
 
             //判断是否可以胡, 碰，杠
-            if (hostPlayer.isHupai(oppoPlayer.getLastOutType())) {
-                menuEnable = true;
-                hostPlayer.sort();
-                hostPlayer.display();
-
-                auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
-                auto hu = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::HU));
-                hu->setEnabled(true);
-            }
-
-            bool isGang, isPeng, isChi;
+            bool isGang, isPeng, isChi, isHu;
+            isHu = hostPlayer.isHupai(oppoPlayer.getLastOutType());
             isChi = hostPlayer.isChi(oppoPlayer.getLastOutType());
             isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
             isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
 
-            if (isChi || isGang || isPeng) {
+            if (isHu || isChi || isGang || isPeng) {
                 menuEnable = true;
                 hostPlayer.sort();
                 hostPlayer.display();
                 auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
 
+
+                auto hu = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::HU));
+                hu->setVisible(isHu);
+                hu->setEnabled(isHu);
+
                 auto gang = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::GANG));
+                gang->setVisible(isGang);
                 gang->setEnabled(isGang);
 
                 auto peng = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::PENG));
+                peng->setVisible(isPeng);
                 peng->setEnabled(isPeng);
 
                 auto chi = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::CHI));
+                chi->setVisible(isChi);
                 chi->setEnabled(isChi);
 
                 auto guo = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::GUO));
+                guo->setVisible(true);
                 guo->setEnabled(true);
 
             } else {
@@ -279,6 +287,7 @@ void MaJiangScene::disableAllChoice() {
     for (int i = MenuItemTag::PENG; i <= MenuItemTag::GUO; ++i) {
         item = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag(i)));
         if (item != nullptr) {
+            item->setVisible(false);
             item->setEnabled(false);
         }
     }

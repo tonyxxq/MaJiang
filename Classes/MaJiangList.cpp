@@ -100,9 +100,9 @@ void MaJiangList::resetColor(const Color3B &color) {
 }
 
 bool MaJiangList::isHuPai(MaJiangType type) {
-    if (majiangs.size() % 3 != 2) {
-        return false;
-    }
+//    if (majiangs.size() % 3 != 2) {
+//        return false;
+//    }
 
     int pai[HONGZHONG + 1] = {0};
     for (auto mj:majiangs) {
