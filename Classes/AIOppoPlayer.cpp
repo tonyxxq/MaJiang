@@ -6,7 +6,7 @@
 
 void AIOppoPlayer::mopai(MaJiang *majiang) {
     if (majiang != nullptr) {
-//        majiang->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN)->getCString());
+        majiang->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN)->getCString());
         playerMaJiang.pushBack(majiang);
     }
 }
@@ -18,7 +18,7 @@ void AIOppoPlayer::display() {
 }
 
 void AIOppoPlayer::chupai(MaJiang *mj) {
-    // 基本ai算法， 能碰则碰， 能杠则杠， 否则出单牌
+    // 基本ai算法， 能杠则杠， 能碰则碰， 否则出单牌
 
     if (mj != nullptr) {
         if (isGang(mj->maJiangType)) {
@@ -48,4 +48,11 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
 
     playerMaJiang.eraseObject(clicked);
     outPlayerMaJiang.pushBack(clicked);
+}
+
+void AIOppoPlayer::displayAll() {
+    for (auto mj:playerMaJiang) {
+        mj->setTexture(MaJiang::getFilePathByType(mj->maJiangType)->getCString());
+    }
+    this->display();
 }

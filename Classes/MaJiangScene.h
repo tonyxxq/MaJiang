@@ -16,6 +16,7 @@ class MaJiangScene : public cocos2d::Layer {
         GANG,
         CHI,
         GUO,
+        HU,
         MENU,
     };
 private:
@@ -39,11 +40,12 @@ public:
 
     void onExit() override;;
 
-//    void chi();
+    void chi(Ref *ref);
     void peng(Ref *ref);
 
     void gang(Ref *ref);
     void guo(Ref *ref);
+    void hu(Ref *ref);
 
     void disableAllChoice();
 };

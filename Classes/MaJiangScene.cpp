@@ -50,7 +50,7 @@ bool MaJiangScene::init() {
     });
 
 
-    for (int k = 0; k < 12; ++k) {
+    for (int k = 0; k < 13; ++k) {
         auto majiang = allMaJiang.consume();
         oppoPlayer.mopai(majiang);
 
@@ -81,15 +81,28 @@ bool MaJiangScene::init() {
     gang->setEnabled(false);
     gang->setTag(MenuItemTag::GANG);
 
+    MenuItemImage *hu = MenuItemImage::create("hu.png", "hu.png", "hu.png",
+                                              CC_CALLBACK_1(MaJiangScene::hu, this));
+    hu->setAnchorPoint(Vec2::ZERO);
+    hu->setPosition(Vec2(90, 0));
+    hu->setEnabled(false);
+    hu->setTag(MenuItemTag::HU);
+
+    MenuItemImage *chi = MenuItemImage::create("chi.png", "chi.png", "chi.png",
+                                               CC_CALLBACK_1(MaJiangScene::chi, this));
+    chi->setAnchorPoint(Vec2::ZERO);
+    chi->setPosition(Vec2(135, 0));
+    chi->setEnabled(false);
+    chi->setTag(MenuItemTag::CHI);
+
     MenuItemImage *guo = MenuItemImage::create("guo.png", "guo.png", "guo.png",
                                                CC_CALLBACK_1(MaJiangScene::guo, this));
     guo->setAnchorPoint(Vec2::ZERO);
-    guo->setPosition(Vec2(90, 0));
+    guo->setPosition(Vec2(180, 0));
     guo->setEnabled(false);
     guo->setTag(MenuItemTag::GUO);
 
-
-    auto menu = Menu::create(peng, gang, guo, NULL);
+    auto menu = Menu::create(peng, gang, hu, chi, guo, NULL);
     menu->setPosition(Vec2::ZERO);
     menu->setTag(MenuItemTag::MENU);
     this->addChild(menu);
@@ -107,31 +120,59 @@ void MaJiangScene::onEnter() {
 
         if (hostPlayer.chupai(location)) {//我先出牌
             //AI摸牌，出牌
-            if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType())) {
+            if (oppoPlayer.isHupai(hostPlayer.getLastOutType())) {
                 auto mj = hostPlayer.popLastOutMaJiang();
-                oppoPlayer.chupai(mj);
-                oppoPlayer.sort();
-                oppoPlayer.display();
-            } else {
-                oppoPlayer.mopai(allMaJiang.consume());
-                oppoPlayer.sort();
-                oppoPlayer.display();
+                mj->setScale(1);
+                oppoPlayer.hupai(mj);
+                oppoPlayer.displayAll();
+                hostPlayer.display();
 
-                if (oppoPlayer.isHupai()) {
-                    auto hule = Sprite::create("hule.png");
-                    hule->setAnchorPoint(Vec2::ZERO);
-                    this->addChild(hule);
-                } else {
-                    oppoPlayer.chupai();
+                auto hule = Sprite::create("hule.png");
+                hule->setAnchorPoint(Vec2::ZERO);
+                this->addChild(hule);
+                Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
+            } else {
+                if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType())) {
+                    auto mj = hostPlayer.popLastOutMaJiang();
+                    oppoPlayer.chupai(mj);
                     oppoPlayer.sort();
                     oppoPlayer.display();
+                } else {
+                    oppoPlayer.mopai(allMaJiang.consume());
+                    oppoPlayer.sort();
+                    oppoPlayer.display();
+
+                    if (oppoPlayer.isHupai()) {
+                        oppoPlayer.displayAll();
+                        auto hule = Sprite::create("hule.png");
+                        hule->setAnchorPoint(Vec2::ZERO);
+                        this->addChild(hule);
+                        Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
+                    } else {
+                        oppoPlayer.chupai();
+                        oppoPlayer.sort();
+                        oppoPlayer.display();
+                    }
                 }
             }
 
-            //判断我是否可以碰，杠
-            bool isGang, isPeng;
-            if ((isGang = hostPlayer.isGang(oppoPlayer.getLastOutType())) ||
-                (isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType()))) {
+            //判断是否可以胡, 碰，杠
+            if (hostPlayer.isHupai(oppoPlayer.getLastOutType())) {
+                menuEnable = true;
+                hostPlayer.sort();
+                hostPlayer.display();
+
+                auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
+                auto hu = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::HU));
+                hu->setEnabled(true);
+            }
+
+            bool isGang, isPeng, isChi;
+            isChi = hostPlayer.isChi(oppoPlayer.getLastOutType());
+            isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
+            isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
+
+            if (isChi || isGang || isPeng) {
                 menuEnable = true;
                 hostPlayer.sort();
                 hostPlayer.display();
@@ -141,21 +182,25 @@ void MaJiangScene::onEnter() {
                 gang->setEnabled(isGang);
 
                 auto peng = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::PENG));
-                peng->setEnabled(isGang || isPeng);
+                peng->setEnabled(isPeng);
+
+                auto chi = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::CHI));
+                chi->setEnabled(isChi);
 
                 auto guo = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::GUO));
                 guo->setEnabled(true);
 
             } else {
-                //我摸牌
+                //摸牌
                 auto newMaJiang = allMaJiang.consume();
                 hostPlayer.mopai(newMaJiang);
                 hostPlayer.sort();
                 hostPlayer.display();
-                if (hostPlayer.isHupai()) {
+                if (hostPlayer.isHupai()) {//判断自摸
                     auto hule = Sprite::create("hule.png");
                     hule->setAnchorPoint(Vec2::ZERO);
                     this->addChild(hule);
+                    Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
                 }
             }
         }
@@ -170,7 +215,6 @@ void MaJiangScene::onExit() {
 }
 
 void MaJiangScene::peng(Ref *ref) {
-    disableAllChoice();
     auto majiang = oppoPlayer.popLastOutMaJiang();
     hostPlayer.peng(majiang);
 
@@ -180,7 +224,6 @@ void MaJiangScene::peng(Ref *ref) {
 }
 
 void MaJiangScene::gang(Ref *ref) {
-    disableAllChoice();
     auto majiang = oppoPlayer.popLastOutMaJiang();
     hostPlayer.gang(majiang);
 
@@ -189,8 +232,33 @@ void MaJiangScene::gang(Ref *ref) {
     disableAllChoice();
 }
 
+void MaJiangScene::chi(Ref *ref) {
+    auto mj = oppoPlayer.popLastOutMaJiang();
+    hostPlayer.chi(mj);
+
+    hostPlayer.display();
+    oppoPlayer.display();
+    disableAllChoice();
+}
+
+void MaJiangScene::hu(Ref *ref) {
+    auto mj = oppoPlayer.popLastOutMaJiang();
+
+    mj->setScale(1);
+    hostPlayer.hupai(mj);
+    hostPlayer.display();
+    oppoPlayer.display();
+
+    auto hule = Sprite::create("hule.png");
+    hule->setAnchorPoint(Vec2::ZERO);
+    this->addChild(hule);
+    Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
+
+    disableAllChoice();
+}
+
 void MaJiangScene::guo(Ref *ref) {
-    //我摸牌
+    //摸牌
     auto newMaJiang = allMaJiang.consume();
     hostPlayer.mopai(newMaJiang);
     hostPlayer.sort();
@@ -203,6 +271,7 @@ void MaJiangScene::guo(Ref *ref) {
     disableAllChoice();
 }
 
+
 void MaJiangScene::disableAllChoice() {
     menuEnable = false;
     auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
@@ -214,6 +283,7 @@ void MaJiangScene::disableAllChoice() {
         }
     }
 }
+
 
 
 

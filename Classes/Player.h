@@ -22,13 +22,21 @@ public:
 
     void sort();
 
-    bool isHupai();
+    bool isHupai(MaJiangType type = BEIMIAN);
 
     bool isPeng(MaJiangType type);
+
     bool isGang(MaJiangType type);
 
+    bool isChi(MaJiangType type);
+
     void peng(MaJiang *mj);
+
     void gang(MaJiang *mj);
+
+    void hupai(MaJiang *mj);
+
+    void chi(MaJiang *mj);
 
     MaJiangType getLastOutType();
 

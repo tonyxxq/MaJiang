@@ -99,7 +99,7 @@ void MaJiangList::resetColor(const Color3B &color) {
     }
 }
 
-bool MaJiangList::isHuPai() {
+bool MaJiangList::isHuPai(MaJiangType type) {
     if (majiangs.size() % 3 != 2) {
         return false;
     }
@@ -107,6 +107,9 @@ bool MaJiangList::isHuPai() {
     int pai[HONGZHONG + 1] = {0};
     for (auto mj:majiangs) {
         pai[mj->maJiangType]++;
+    }
+    if (type != BEIMIAN) {
+        pai[type]++;
     }
 
     for (int i = 1; i <= HONGZHONG; ++i) {
@@ -197,6 +200,33 @@ bool MaJiangList::isGang(MaJiangType type) {
     }
 
     return count >= 3;
+}
+
+int MaJiangList::isChi(MaJiangType type) {
+    int chiPosition = 0b000;
+
+    int pai[HONGZHONG + 1] = {0};
+    for (auto mj:majiangs) {
+        pai[mj->maJiangType]++;
+    }
+
+    if ((type >= WAN_1 && type + 2 <= WAN_9 || type >= TONG_1 && type + 2 <= TONG_9 ||
+         type >= TIAO_1 && type + 2 <= TIAO_9)
+        && pai[type + 1] >= 1 && pai[type + 2] >= 1) { //011
+        chiPosition |= 0b100;
+    }
+    if ((type + 1 <= WAN_9 && type - 1 >= WAN_1 || type + 1 <= TONG_9 && type - 1 >= TONG_1 ||
+         type + 1 <= TIAO_9 && type - 1 >= TIAO_1)
+        && pai[type - 1] >= 1 && pai[type + 1] >= 1) {//101
+        chiPosition |= 0b010;
+    }
+    if ((type - 2 >= WAN_1 && type <= WAN_9 || type - 2 >= TONG_1 && type <= TONG_9 ||
+         type - 2 >= TIAO_1 && type <= TIAO_9)
+        && pai[type - 2] >= 1 && pai[type - 1] >= 1) { // 110
+        chiPosition |= 0b001;
+    }
+
+    return chiPosition;
 }
 
 

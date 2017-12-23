@@ -17,6 +17,8 @@ public:
     void display() override;
 
     void chupai(MaJiang *mj = nullptr);
+
+    void displayAll();
 };
 
 

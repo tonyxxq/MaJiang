@@ -42,11 +42,13 @@ public:
 
     MaJiang* getByType(MaJiangType type);
 
-    bool isHuPai();
+    bool isHuPai(MaJiangType type = BEIMIAN);
 
     bool isPeng(MaJiangType type);
 
     bool isGang(MaJiangType type);
+
+    int isChi(MaJiangType type);
 
     MaJiang *contain(const Vec2& location);
 };
