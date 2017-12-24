@@ -12,7 +12,7 @@
 
 class MaJiangScene : public cocos2d::Layer {
     enum MenuItemTag {
-        CHI=101,
+        CHI = 101,
         PENG,
         GANG,
         HU,
@@ -26,6 +26,9 @@ private:
     bool menuEnable = false;
 
     bool isMyTurn = true;
+
+    void showHuPai();
+
 public:
     // there's no 'id' in cpp, so we recommend returning the class instance pointer
     static cocos2d::Scene *createScene();
@@ -41,13 +44,20 @@ public:
     void onExit() override;;
 
     void chi(Ref *ref);
+
     void peng(Ref *ref);
 
     void gang(Ref *ref);
+
     void guo(Ref *ref);
+
     void hu(Ref *ref);
 
     void disableAllChoice();
+
+    void onMouseUp(EventMouse *event);
+
+    bool tryHuPai(Player *player1, Player *player2 = nullptr);
 };
 
 #endif // __MAJIANG_SCENE_H__

@@ -15,7 +15,7 @@ class MaJiang : public Sprite {
 public:
     MaJiangType maJiangType;
     static MaJiang *create(MaJiangType type);
-    static __String* getFilePathByType(MaJiangType type);
+    static __String getFilePathByType(MaJiangType type);
 
 private:
 };

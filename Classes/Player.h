@@ -42,6 +42,8 @@ public:
 
     MaJiang *popLastOutMaJiang();
 
+    MaJiang *popLastPlayerMaJiang();
+
     void pushToOutMaJiangList(MaJiang *item, ...);
 };
 

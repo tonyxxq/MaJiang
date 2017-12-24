@@ -6,7 +6,7 @@
 
 void AIOppoPlayer::mopai(MaJiang *majiang) {
     if (majiang != nullptr) {
-        majiang->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN)->getCString());
+        majiang->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());
         playerMaJiang.pushBack(majiang);
     }
 }
@@ -42,7 +42,8 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
     }
 
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/chupai.wav");
-    clicked->setTexture(MaJiang::getFilePathByType(clicked->maJiangType)->getCString());
+    auto texturePath = MaJiang::getFilePathByType(clicked->maJiangType);
+    clicked->setTexture(texturePath.getCString());
     clicked->setScale(0.5f);
     playerMaJiang.resetColor(Color3B::WHITE);
 
@@ -52,7 +53,8 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
 
 void AIOppoPlayer::displayAll() {
     for (auto mj:playerMaJiang) {
-        mj->setTexture(MaJiang::getFilePathByType(mj->maJiangType)->getCString());
+        auto texturePath = MaJiang::getFilePathByType(mj->maJiangType);
+        mj->setTexture(texturePath.getCString());
     }
     this->display();
 }

@@ -45,6 +45,12 @@ MaJiang *Player::popLastOutMaJiang() {
     return majiang;
 }
 
+MaJiang *Player::popLastPlayerMaJiang() {
+    auto majiang = *(--playerMaJiang.cend());
+    playerMaJiang.eraseObject(majiang);
+    return majiang;
+}
+
 void Player::peng(MaJiang *mj) {
     MaJiangType type = mj->maJiangType;
     if (!isPeng(type)) {
@@ -58,7 +64,7 @@ void Player::peng(MaJiang *mj) {
         m = playerMaJiang.getByType(type);
         m->setColor(Color3B::GREEN);
         m->setScale(0.5f);
-        m->setTexture(MaJiang::getFilePathByType(m->maJiangType)->getCString());
+        m->setTexture(MaJiang::getFilePathByType(m->maJiangType).getCString());
         outPlayerMaJiang.pushBack(m);
         playerMaJiang.eraseObject(m);
     }
@@ -77,7 +83,7 @@ void Player::gang(MaJiang *mj) {
         m = playerMaJiang.getByType(type);
         m->setColor(Color3B::GREEN);
         m->setScale(0.5f);
-        m->setTexture(MaJiang::getFilePathByType(m->maJiangType)->getCString());
+        m->setTexture(MaJiang::getFilePathByType(m->maJiangType).getCString());
         outPlayerMaJiang.pushBack(m);
         playerMaJiang.eraseObject(m);
     }
@@ -104,7 +110,7 @@ void Player::chi(MaJiang *mj) {
             auto m = playerMaJiang.getByType(MaJiangType(startType + i));
             m->setColor(Color3B::GREEN);
             m->setScale(0.5f);
-            m->setTexture(MaJiang::getFilePathByType(m->maJiangType)->getCString());
+            m->setTexture(MaJiang::getFilePathByType(m->maJiangType).getCString());
             outPlayerMaJiang.pushBack(m);
             playerMaJiang.eraseObject(m);
         }
@@ -127,6 +133,7 @@ void Player::hupai(MaJiang *mj) {
         playerMaJiang.pushBack(mj);
     }
 }
+
 
 
 

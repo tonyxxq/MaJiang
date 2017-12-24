@@ -1,5 +1,4 @@
 #include "MaJiangScene.h"
-#include <algorithm>
 
 USING_NS_CC;
 
@@ -103,105 +102,14 @@ bool MaJiangScene::init() {
     menu->setPosition(Vec2::ZERO);
     menu->setTag(MenuItemTag::MENU);
     this->addChild(menu);
+
     return true;
 }
 
 void MaJiangScene::onEnter() {
     Node::onEnter();
     auto mouseListener = EventListenerMouse::create();
-    mouseListener->onMouseUp = [this](EventMouse *event) {
-        if (!isMyTurn || menuEnable) {
-            return;
-        }
-        auto location = event->getLocationInView();
-
-        if (hostPlayer.chupai(location)) {//我先出牌
-            //AI摸牌，出牌
-            if (oppoPlayer.isHupai(hostPlayer.getLastOutType())) {
-                auto mj = hostPlayer.popLastOutMaJiang();
-                mj->setScale(1);
-                oppoPlayer.hupai(mj);
-                oppoPlayer.displayAll();
-                hostPlayer.display();
-
-                auto hule = Sprite::create("hule.png");
-                hule->setAnchorPoint(Vec2::ZERO);
-                this->addChild(hule);
-                Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
-            } else {
-                if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType())) {
-                    auto mj = hostPlayer.popLastOutMaJiang();
-                    oppoPlayer.chupai(mj);
-                    oppoPlayer.sort();
-                    oppoPlayer.display();
-                } else {
-                    oppoPlayer.mopai(allMaJiang.consume());
-                    oppoPlayer.sort();
-                    oppoPlayer.display();
-
-                    if (oppoPlayer.isHupai()) {
-                        oppoPlayer.displayAll();
-                        auto hule = Sprite::create("hule.png");
-                        hule->setAnchorPoint(Vec2::ZERO);
-                        this->addChild(hule);
-                        Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
-                    } else {
-                        oppoPlayer.chupai();
-                        oppoPlayer.sort();
-                        oppoPlayer.display();
-                    }
-                }
-            }
-
-            //判断是否可以胡, 碰，杠
-            bool isGang, isPeng, isChi, isHu;
-            isHu = hostPlayer.isHupai(oppoPlayer.getLastOutType());
-            isChi = hostPlayer.isChi(oppoPlayer.getLastOutType());
-            isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
-            isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
-
-            if (isHu || isChi || isGang || isPeng) {
-                menuEnable = true;
-                hostPlayer.sort();
-                hostPlayer.display();
-                auto menu = this->getChildByTag(MenuItemTag::MENU);
-
-
-                auto hu = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::HU));
-                hu->setVisible(isHu);
-                hu->setEnabled(isHu);
-
-                auto gang = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GANG));
-                gang->setVisible(isGang);
-                gang->setEnabled(isGang);
-
-                auto peng = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::PENG));
-                peng->setVisible(isPeng);
-                peng->setEnabled(isPeng);
-
-                auto chi = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::CHI));
-                chi->setVisible(isChi);
-                chi->setEnabled(isChi);
-
-                auto guo = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GUO));
-                guo->setVisible(true);
-                guo->setEnabled(true);
-
-            } else {
-                //摸牌
-                auto newMaJiang = allMaJiang.consume();
-                hostPlayer.mopai(newMaJiang);
-                hostPlayer.sort();
-                hostPlayer.display();
-                if (hostPlayer.isHupai()) {//判断自摸
-                    auto hule = Sprite::create("hule.png");
-                    hule->setAnchorPoint(Vec2::ZERO);
-                    this->addChild(hule);
-                    Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
-                }
-            }
-        }
-    };
+    mouseListener->onMouseUp = CC_CALLBACK_1(MaJiangScene::onMouseUp, this);
 
     Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(mouseListener, 1);
 }
@@ -239,18 +147,7 @@ void MaJiangScene::chi(Ref *ref) {
 }
 
 void MaJiangScene::hu(Ref *ref) {
-    auto mj = oppoPlayer.popLastOutMaJiang();
-
-    mj->setScale(1);
-    hostPlayer.hupai(mj);
-    hostPlayer.display();
-    oppoPlayer.display();
-
-    auto hule = Sprite::create("hule.png");
-    hule->setAnchorPoint(Vec2::ZERO);
-    this->addChild(hule);
-    Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
-
+    tryHuPai(&hostPlayer, &oppoPlayer);
     disableAllChoice();
 }
 
@@ -261,9 +158,7 @@ void MaJiangScene::guo(Ref *ref) {
     hostPlayer.sort();
     hostPlayer.display();
     if (hostPlayer.isHupai()) {
-        auto hule = Sprite::create("hule.png");
-        hule->setAnchorPoint(Vec2::ZERO);
-        this->addChild(hule);
+        showHuPai();
     }
     disableAllChoice();
 }
@@ -280,6 +175,103 @@ void MaJiangScene::disableAllChoice() {
             item->setEnabled(false);
         }
     }
+}
+
+void MaJiangScene::showHuPai() {
+    oppoPlayer.sort();
+    hostPlayer.sort();
+    oppoPlayer.displayAll();
+    oppoPlayer.display();
+    hostPlayer.display();
+
+    auto hule = Sprite::create("hule.png");
+    hule->setAnchorPoint(Vec2::ZERO);
+    this->addChild(hule);
+    Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
+    Director::getInstance()->pause();
+}
+
+void MaJiangScene::onMouseUp(EventMouse *event) {
+
+    if (!isMyTurn || menuEnable) {
+        return;
+    }
+    auto location = event->getLocationInView();
+
+    if (hostPlayer.chupai(location)) {//我先出牌
+        //AI摸牌，出牌
+        if (!tryHuPai(&oppoPlayer, &hostPlayer)) {
+            if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType())) {
+                auto mj = hostPlayer.popLastOutMaJiang();
+                oppoPlayer.chupai(mj);
+            } else {
+                oppoPlayer.mopai(allMaJiang.consume());
+
+                if (!tryHuPai(&oppoPlayer)) {//ai判断自摸
+                    oppoPlayer.chupai();
+                }
+            }
+        }
+
+        oppoPlayer.sort();
+        oppoPlayer.display();
+
+        //判断是否可以胡, 碰，杠
+        bool isGang, isPeng, isChi, isHu;
+        isChi = hostPlayer.isChi(oppoPlayer.getLastOutType());
+        isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
+        isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
+        isHu = hostPlayer.isHupai(oppoPlayer.getLastOutType());
+        bool setMenuItemHelper[] = {isChi, isPeng, isGang, isHu};
+
+        if (isHu || isChi || isGang || isPeng) {
+            menuEnable = true;
+
+            auto menu = this->getChildByTag(MenuItemTag::MENU);
+
+            for (int i = 0; i <= HU - CHI; ++i) {
+                auto item = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag(CHI + i)));
+                item->setVisible(setMenuItemHelper[i]);
+                item->setEnabled(setMenuItemHelper[i]);
+            }
+
+            auto guo = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GUO));
+            guo->setVisible(true);
+            guo->setEnabled(true);
+
+        } else {
+            //摸牌
+            auto newMaJiang = allMaJiang.consume();
+            hostPlayer.mopai(newMaJiang);
+            tryHuPai(&hostPlayer);
+        }
+        hostPlayer.sort();
+        hostPlayer.display();
+    }
+
+}
+
+bool MaJiangScene::tryHuPai(Player *player1, Player *player2) {
+    if (player2 != nullptr) {
+        if (player1->isHupai(player2->getLastOutType())) {
+            auto mj = player2->popLastOutMaJiang();
+            mj->setScale(1);
+            player1->hupai(mj);
+//            if (typeid(player1) == typeid(AIOppoPlayer)) {
+//                dynamic_cast<AIOppoPlayer *>(player1)->displayAll();
+//            }
+            showHuPai();
+            return true;
+        }
+    } else {
+        if (player1->isHupai()) {
+            auto mj = player1->popLastPlayerMaJiang();
+            player1->hupai(mj);
+            showHuPai();
+            return true;
+        }
+    }
+    return false;
 }
 
 
