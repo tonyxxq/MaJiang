@@ -70,47 +70,36 @@ bool MaJiangScene::init() {
     hostPlayer.display();
     oppoPlayer.display();
 
-    MenuItemImage *peng = MenuItemImage::create("peng.png", "peng.png", "peng.png",
-                                                CC_CALLBACK_1(MaJiangScene::peng, this));
-    peng->setAnchorPoint(Vec2::ZERO);
-    peng->setPosition(Vec2(0, 0));
-    peng->setVisible(false);
-    peng->setEnabled(false);
-    peng->setTag(MenuItemTag::PENG);
+    //初始化"吃碰杠胡过"菜单
+    int fontSize = 60;
+    TTFConfig ttfConfig("fonts/STLITI.ttf", fontSize, GlyphCollection::DYNAMIC);
+    ttfConfig.bold = true;
+    float labelYPosition = PLAYER1_MAJIANGS_POSITTION + (*allMaJiang.begin())->getContentSize().height + 20;
+    auto labelXPosition = visibleSize.width / 2;
+    typedef void (MaJiangScene::*callBackFuncPointer)(cocos2d::Ref *);
+    callBackFuncPointer labelCallBackFunc[] = {&MaJiangScene::chi, &MaJiangScene::peng, &MaJiangScene::gang,
+                                               &MaJiangScene::hu,
+                                               &MaJiangScene::guo};
+    std::string labels[] = {"吃", "碰", "杠", "胡", "过"};
+    MenuItemLabel *menuItemLabels[5];
+    fontSize += 20;
+    for (int i = 0; i <= GUO - CHI; ++i) {
+        auto label = Label::createWithTTF(ttfConfig, labels[i]);
+        label->setColor(Color3B::RED);
+        auto labelMenuItem = MenuItemLabel::create(label, std::bind(labelCallBackFunc[i], this, std::placeholders::_1));
 
-    MenuItemImage *gang = MenuItemImage::create("gang.png", "gang.png", "gang.png",
-                                                CC_CALLBACK_1(MaJiangScene::gang, this));
-    gang->setAnchorPoint(Vec2::ZERO);
-    gang->setPosition(Vec2(45, 0));
-    gang->setVisible(false);
-    gang->setEnabled(false);
-    gang->setTag(MenuItemTag::GANG);
+        labelMenuItem->setAnchorPoint(Vec2::ZERO);
+        labelMenuItem->setPosition(Vec2(labelXPosition, labelYPosition));
+        labelMenuItem->setVisible(false);
+        labelMenuItem->setEnabled(false);
+        labelMenuItem->setTag(MenuItemTag(CHI + i));
+        labelXPosition += fontSize;
 
-    MenuItemImage *hu = MenuItemImage::create("hu.png", "hu.png", "hu.png",
-                                              CC_CALLBACK_1(MaJiangScene::hu, this));
-    hu->setAnchorPoint(Vec2::ZERO);
-    hu->setPosition(Vec2(90, 0));
-    hu->setVisible(false);
-    hu->setEnabled(false);
-    hu->setTag(MenuItemTag::HU);
+        menuItemLabels[i] = labelMenuItem;
+    }
 
-    MenuItemImage *chi = MenuItemImage::create("chi.png", "chi.png", "chi.png",
-                                               CC_CALLBACK_1(MaJiangScene::chi, this));
-    chi->setAnchorPoint(Vec2::ZERO);
-    chi->setPosition(Vec2(135, 0));
-    chi->setVisible(false);
-    chi->setEnabled(false);
-    chi->setTag(MenuItemTag::CHI);
-
-    MenuItemImage *guo = MenuItemImage::create("guo.png", "guo.png", "guo.png",
-                                               CC_CALLBACK_1(MaJiangScene::guo, this));
-    guo->setAnchorPoint(Vec2::ZERO);
-    guo->setPosition(Vec2(180, 0));
-    guo->setVisible(false);
-    guo->setEnabled(false);
-    guo->setTag(MenuItemTag::GUO);
-
-    auto menu = Menu::create(peng, gang, hu, chi, guo, NULL);
+    auto menu = Menu::create(menuItemLabels[0], menuItemLabels[1], menuItemLabels[2], menuItemLabels[3],
+                             menuItemLabels[4], NULL);
     menu->setPosition(Vec2::ZERO);
     menu->setTag(MenuItemTag::MENU);
     this->addChild(menu);
@@ -175,26 +164,26 @@ void MaJiangScene::onEnter() {
                 menuEnable = true;
                 hostPlayer.sort();
                 hostPlayer.display();
-                auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
+                auto menu = this->getChildByTag(MenuItemTag::MENU);
 
 
-                auto hu = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::HU));
+                auto hu = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::HU));
                 hu->setVisible(isHu);
                 hu->setEnabled(isHu);
 
-                auto gang = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::GANG));
+                auto gang = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GANG));
                 gang->setVisible(isGang);
                 gang->setEnabled(isGang);
 
-                auto peng = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::PENG));
+                auto peng = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::PENG));
                 peng->setVisible(isPeng);
                 peng->setEnabled(isPeng);
 
-                auto chi = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::CHI));
+                auto chi = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::CHI));
                 chi->setVisible(isChi);
                 chi->setEnabled(isChi);
 
-                auto guo = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag::GUO));
+                auto guo = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GUO));
                 guo->setVisible(true);
                 guo->setEnabled(true);
 
@@ -283,9 +272,9 @@ void MaJiangScene::guo(Ref *ref) {
 void MaJiangScene::disableAllChoice() {
     menuEnable = false;
     auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
-    MenuItemImage *item = nullptr;
-    for (int i = MenuItemTag::PENG; i <= MenuItemTag::GUO; ++i) {
-        item = dynamic_cast<MenuItemImage *>(menu->getChildByTag(MenuItemTag(i)));
+    MenuItem *item = nullptr;
+    for (int i = MenuItemTag::CHI; i <= MenuItemTag::GUO; ++i) {
+        item = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag(i)));
         if (item != nullptr) {
             item->setVisible(false);
             item->setEnabled(false);

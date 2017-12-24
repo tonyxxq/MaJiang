@@ -6,7 +6,7 @@
 
 void HostPlayer::display() {
     playerMaJiang.display(PLAYER1_MAJIANGS_POSITTION);
-    outPlayerMaJiang.display(PLAYER1_MAJIANGS_POSITTION + 150);
+    outPlayerMaJiang.display(PLAYER1_MAJIANGS_POSITTION + 210);
 }
 
 bool HostPlayer::chupai(const Vec2 &location) {

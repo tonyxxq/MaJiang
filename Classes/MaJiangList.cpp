@@ -151,7 +151,7 @@ bool MaJiangList::checkSequenceAndTriplet(int *pai) {
             pai[i + 1]++;
             pai[i + 2]++;
         }
-        if (pai[i] >= 3) {
+        if (pai[i] >= 3) { //刻子
             pai[i] -= 3;
             if (checkSequenceAndTriplet(pai)) {
                 return true;

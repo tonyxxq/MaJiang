@@ -12,11 +12,11 @@
 
 class MaJiangScene : public cocos2d::Layer {
     enum MenuItemTag {
-        PENG = 101,
+        CHI=101,
+        PENG,
         GANG,
-        CHI,
-        GUO,
         HU,
+        GUO,
         MENU,
     };
 private:
