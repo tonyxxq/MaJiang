@@ -18,13 +18,15 @@ void AIOppoPlayer::display() {
 }
 
 void AIOppoPlayer::chupai(MaJiang *mj) {
-    // 基本ai算法， 能杠则杠， 能碰则碰， 否则出单牌
 
+    // 基本ai算法， 能杠则杠， 能碰则碰， 否则出单牌
     if (mj != nullptr) {
         if (isGang(mj->maJiangType)) {
             gang(mj);
         } else if (isPeng(mj->maJiangType)) {
             peng(mj);
+        } else if (isChi(mj->maJiangType)) {
+            chi(mj);
         }
     }
 

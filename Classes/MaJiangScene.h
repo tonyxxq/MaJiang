@@ -17,6 +17,7 @@ class MaJiangScene : public cocos2d::Layer {
         GANG,
         HU,
         GUO,
+        LEFT, MIDDLE, RIGHT,
         MENU,
     };
 private:
@@ -45,6 +46,10 @@ public:
 
     void chi(Ref *ref);
 
+    void chiLeft(Ref *ref);//left
+    void chiMiddle(Ref *ref);//middle
+    void chiRight(Ref *ref);//right
+
     void peng(Ref *ref);
 
     void gang(Ref *ref);
@@ -56,6 +61,8 @@ public:
     void disableAllChoice();
 
     void onMouseUp(EventMouse *event);
+
+    void selectToChi(int chiPosition);
 
     bool tryHuPai(Player *player1, Player *player2 = nullptr);
 };

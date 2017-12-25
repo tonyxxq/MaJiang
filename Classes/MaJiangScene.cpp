@@ -78,11 +78,15 @@ bool MaJiangScene::init() {
     typedef void (MaJiangScene::*callBackFuncPointer)(cocos2d::Ref *);
     callBackFuncPointer labelCallBackFunc[] = {&MaJiangScene::chi, &MaJiangScene::peng, &MaJiangScene::gang,
                                                &MaJiangScene::hu,
-                                               &MaJiangScene::guo};
-    std::string labels[] = {"吃", "碰", "杠", "胡", "过"};
-    MenuItemLabel *menuItemLabels[5];
+                                               &MaJiangScene::guo, &MaJiangScene::chiLeft, &MaJiangScene::chiMiddle,
+                                               &MaJiangScene::chiRight};
+    std::string labels[] = {"吃", "碰", "杠", "胡", "过", "左", "中", "右"};
+    Vector<MenuItem *> menuItemLabels(8);
     fontSize += 20;
-    for (int i = 0; i <= GUO - CHI; ++i) {
+    for (int i = 0; i <= RIGHT - CHI; ++i) {
+        if (i == LEFT - CHI) {
+            labelXPosition = visibleSize.width / 2;
+        }
         auto label = Label::createWithTTF(ttfConfig, labels[i]);
         label->setColor(Color3B::RED);
         auto labelMenuItem = MenuItemLabel::create(label, std::bind(labelCallBackFunc[i], this, std::placeholders::_1));
@@ -94,11 +98,10 @@ bool MaJiangScene::init() {
         labelMenuItem->setTag(MenuItemTag(CHI + i));
         labelXPosition += fontSize;
 
-        menuItemLabels[i] = labelMenuItem;
+        menuItemLabels.pushBack(labelMenuItem);
     }
 
-    auto menu = Menu::create(menuItemLabels[0], menuItemLabels[1], menuItemLabels[2], menuItemLabels[3],
-                             menuItemLabels[4], NULL);
+    auto menu = Menu::createWithArray(menuItemLabels);
     menu->setPosition(Vec2::ZERO);
     menu->setTag(MenuItemTag::MENU);
     this->addChild(menu);
@@ -137,9 +140,30 @@ void MaJiangScene::gang(Ref *ref) {
     disableAllChoice();
 }
 
+void MaJiangScene::selectToChi(int chiPosition) {
+    menuEnable = true;
+    auto menu = dynamic_cast<Menu *>(this->getChildByTag(MENU));
+
+    for (int position_tmp = RIGHT; position_tmp >= LEFT; --position_tmp) {
+        if (chiPosition & 0b001) {
+            auto menuItem = dynamic_cast<MenuItem *>(menu->getChildByTag(position_tmp));
+            menuItem->setVisible(true);
+            menuItem->setEnabled(true);
+        }
+        chiPosition >>= 1;
+    }
+}
+
 void MaJiangScene::chi(Ref *ref) {
-    auto mj = oppoPlayer.popLastOutMaJiang();
-    hostPlayer.chi(mj);
+    int chiPosition = hostPlayer.isChi(oppoPlayer.getLastOutType());
+    if (chiPosition == 1 || chiPosition == 2 || chiPosition == 4) {
+        auto mj = oppoPlayer.popLastOutMaJiang();
+        hostPlayer.chi(mj);
+    } else {
+        disableAllChoice();
+        selectToChi(chiPosition);
+        return;
+    }
 
     hostPlayer.display();
     oppoPlayer.display();
@@ -168,7 +192,7 @@ void MaJiangScene::disableAllChoice() {
     menuEnable = false;
     auto menu = dynamic_cast<Menu *>(this->getChildByTag(MenuItemTag::MENU));
     MenuItem *item = nullptr;
-    for (int i = MenuItemTag::CHI; i <= MenuItemTag::GUO; ++i) {
+    for (int i = MenuItemTag::CHI; i <= MenuItemTag::RIGHT; ++i) {
         item = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag(i)));
         if (item != nullptr) {
             item->setVisible(false);
@@ -201,7 +225,8 @@ void MaJiangScene::onMouseUp(EventMouse *event) {
     if (hostPlayer.chupai(location)) {//我先出牌
         //AI摸牌，出牌
         if (!tryHuPai(&oppoPlayer, &hostPlayer)) {
-            if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType())) {
+            if (oppoPlayer.isGang(hostPlayer.getLastOutType()) || oppoPlayer.isPeng(hostPlayer.getLastOutType()) ||
+                oppoPlayer.isChi(hostPlayer.getLastOutType())) {
                 auto mj = hostPlayer.popLastOutMaJiang();
                 oppoPlayer.chupai(mj);
             } else {
@@ -218,7 +243,7 @@ void MaJiangScene::onMouseUp(EventMouse *event) {
 
         //判断是否可以胡, 碰，杠
         bool isGang, isPeng, isChi, isHu;
-        isChi = hostPlayer.isChi(oppoPlayer.getLastOutType());
+        isChi = hostPlayer.isChi(oppoPlayer.getLastOutType()) != 0;
         isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
         isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
         isHu = hostPlayer.isHupai(oppoPlayer.getLastOutType());
@@ -252,6 +277,19 @@ void MaJiangScene::onMouseUp(EventMouse *event) {
 }
 
 bool MaJiangScene::tryHuPai(Player *player1, Player *player2) {
+    std::function<void(void)> func = [player1]() {
+        auto userDefaule = UserDefault::getInstance();
+        if (typeid(*player1) == typeid(AIOppoPlayer)) {
+            auto score = userDefaule->getIntegerForKey("aiPlayerScore", 0);
+            score++;
+            userDefaule->setIntegerForKey("aiPlayerScore", score);
+        } else {
+            auto score = userDefaule->getIntegerForKey("HostPlayerScore", 0);
+            score++;
+            userDefaule->setIntegerForKey("HostPlayerScore", score);
+        }
+    };
+
     if (player2 != nullptr) {
         if (player1->isHupai(player2->getLastOutType())) {
             auto mj = player2->popLastOutMaJiang();
@@ -261,6 +299,7 @@ bool MaJiangScene::tryHuPai(Player *player1, Player *player2) {
 //                dynamic_cast<AIOppoPlayer *>(player1)->displayAll();
 //            }
             showHuPai();
+            func();
             return true;
         }
     } else {
@@ -268,11 +307,40 @@ bool MaJiangScene::tryHuPai(Player *player1, Player *player2) {
             auto mj = player1->popLastPlayerMaJiang();
             player1->hupai(mj);
             showHuPai();
+            func();
             return true;
         }
     }
     return false;
 }
+
+void MaJiangScene::chiLeft(Ref *ref) {
+    auto mj = oppoPlayer.popLastOutMaJiang();
+    hostPlayer.chi(mj, 0b100);
+
+    hostPlayer.display();
+    oppoPlayer.display();
+    disableAllChoice();
+}
+
+void MaJiangScene::chiMiddle(Ref *ref) {
+    auto mj = oppoPlayer.popLastOutMaJiang();
+    hostPlayer.chi(mj, 0b010);
+
+    hostPlayer.display();
+    oppoPlayer.display();
+    disableAllChoice();
+}
+
+void MaJiangScene::chiRight(Ref *ref) {
+    auto mj = oppoPlayer.popLastOutMaJiang();
+    hostPlayer.chi(mj, 0b001);
+
+    hostPlayer.display();
+    oppoPlayer.display();
+    disableAllChoice();
+}
+
 
 
 

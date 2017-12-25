@@ -31,8 +31,8 @@ bool Player::isGang(MaJiangType type) {
     return playerMaJiang.isGang(type);
 }
 
-bool Player::isChi(MaJiangType type) {
-    return playerMaJiang.isChi(type) != 0;
+int Player::isChi(MaJiangType type) {
+    return playerMaJiang.isChi(type);
 }
 
 MaJiangType Player::getLastOutType() {
@@ -89,8 +89,13 @@ void Player::gang(MaJiang *mj) {
     }
 }
 
-void Player::chi(MaJiang *mj) {
+void Player::chi(MaJiang *mj, int chiPosition) {
     int position = playerMaJiang.isChi(mj->maJiangType);
+
+    if (chiPosition != 0) {
+        position = chiPosition;
+    }
+
     if (position == 0) {
         return;
     }
@@ -105,6 +110,7 @@ void Player::chi(MaJiang *mj) {
     } else if (position & 0b001) {
         startType = mj->maJiangType - 2;
     }
+
     if (startType != BEIMIAN) {
         for (int i = 0; i < 3; ++i) {
             auto m = playerMaJiang.getByType(MaJiangType(startType + i));
@@ -115,16 +121,17 @@ void Player::chi(MaJiang *mj) {
             playerMaJiang.eraseObject(m);
         }
     }
+    playerMaJiang.sort();
 }
 
 void Player::pushToOutMaJiangList(MaJiang *item, ...) {
-    va_list args;
-    va_start(args, item);
-    while (item) {
-        outPlayerMaJiang.pushBack(item);
-        item = va_arg(args, MaJiang*);
-    }
-    va_end(args);
+//    va_list args;
+//    va_start(args, item);
+//    while (item) {
+//        outPlayerMaJiang.pushBack(item);
+//        item = va_arg(args, MaJiang*);
+//    }
+//    va_end(args);
 }
 
 void Player::hupai(MaJiang *mj) {
@@ -132,6 +139,16 @@ void Player::hupai(MaJiang *mj) {
         mj->setColor(Color3B::RED);
         playerMaJiang.pushBack(mj);
     }
+}
+
+void Player::pushToPlayerMaJiangList(MaJiang *item, ...) {
+//    va_list args;
+//    va_start(args, item);
+//    while (item) {
+//        playerMaJiang.pushBack(item);
+//        item = va_arg(args, MaJiang*);
+//    }
+//    va_end(args);
 }
 
 

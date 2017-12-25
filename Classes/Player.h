@@ -28,7 +28,7 @@ public:
 
     bool isGang(MaJiangType type);
 
-    bool isChi(MaJiangType type);
+    int isChi(MaJiangType type);
 
     void peng(MaJiang *mj);
 
@@ -36,7 +36,7 @@ public:
 
     void hupai(MaJiang *mj);
 
-    void chi(MaJiang *mj);
+    void chi(MaJiang *mj, int chiPosition = 0);
 
     MaJiangType getLastOutType();
 
@@ -45,6 +45,8 @@ public:
     MaJiang *popLastPlayerMaJiang();
 
     void pushToOutMaJiangList(MaJiang *item, ...);
+
+    void pushToPlayerMaJiangList(MaJiang *item, ...);
 };
 
 
