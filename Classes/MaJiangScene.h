@@ -28,8 +28,11 @@ private:
 
     bool isMyTurn = true;
 
+    void initMenu();
+
     void showHuPai();
 
+    void chupaiProcess(const Vec2 &location);
 public:
     // there's no 'id' in cpp, so we recommend returning the class instance pointer
     static cocos2d::Scene *createScene();
