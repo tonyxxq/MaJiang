@@ -1,6 +1,7 @@
 
 #include "AppDelegate.h"
 #include "MaJiangScene.h"
+#include "HelloScene.h"
 
 USING_NS_CC;
 
@@ -76,7 +77,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = MaJiangScene::createScene();
+//    auto scene = MaJiangScene::createScene();
+    auto scene = HelloScene::create();
 
     // run
     director->runWithScene(scene);
