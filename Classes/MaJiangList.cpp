@@ -222,7 +222,7 @@ int MaJiangList::isChi(MaJiangType type) {
     }
     if ((type - 2 >= WAN_1 && type <= WAN_9 || type - 2 >= TONG_1 && type <= TONG_9 ||
          type - 2 >= TIAO_1 && type <= TIAO_9)
-        && pai[type - 2] >= 1 && pai[type - 1] >= 1) { // 110
+        && pai[type - 2] >= 1 && pai[type - 1] >= 1) { //110
         chiPosition |= 0b001;
     }
 

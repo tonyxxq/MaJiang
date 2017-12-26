@@ -33,6 +33,28 @@ int consumeMaJiang(vector<MaJiangType> &majiangs, int &consumeMaJiangPosition) {
     return majiangs[consumeMaJiangPosition++];
 }
 
+void do_host(int hostfd, int oppofd) {
+    int buf[512];
+    while (true) {
+        if (read(hostfd, buf, sizeof(int)) <= 0) break;
+        read(hostfd, &buf[1], (buf[0] - 1) * sizeof(int));
+        write(oppofd, buf, sizeof(int) * buf[0]);
+    }
+    close(hostfd);
+    close(oppofd);
+}
+
+void do_oppo(int hostfd, int oppofd) {
+    int buf[512];
+    while (true) {
+        if (read(oppofd, buf, sizeof(int)) <= 0) break;
+        read(oppofd, &buf[1], (buf[0] - 1) * sizeof(int));
+        write(hostfd, buf, sizeof(int) * buf[0]);
+    }
+    close(hostfd);
+    close(oppofd);
+}
+
 void do_work(int *cfd) {
     vector<MaJiangType> majiangs;
     int consumeMaJiangPosition = 0;
@@ -69,19 +91,11 @@ void do_work(int *cfd) {
     write(host_fd, mjs, sizeof(int) * (mjs[0]));
     mjs[2] = 0;
     write(oppo_fd, mjs, sizeof(int) * (mjs[0]));
-    while (true) {
-        int buf[512];
 
-        if (read(host_fd, buf, sizeof(int)) <= 0) break;
-        read(host_fd, &buf[1], (buf[0] - 1) * sizeof(int));
-        write(oppo_fd, buf, sizeof(int) * buf[0]);
-
-        if (read(oppo_fd, buf, sizeof(int)) <= 0) break;
-        read(oppo_fd, &buf[1], (buf[0] - 1) * sizeof(int));
-        write(host_fd, buf, sizeof(int) * buf[0]);
-    }
-    close(cfd[0]);
-    close(cfd[1]);
+    auto host_thread = std::thread(do_host, host_fd, oppo_fd);
+    host_thread.detach();
+    auto oppo_thread = std::thread(do_oppo, host_fd, oppo_fd);
+    oppo_thread.detach();
 }
 
 void do_work1(int *cfd) {

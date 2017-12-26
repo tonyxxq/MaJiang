@@ -26,7 +26,6 @@ bool MaJiangMultiPlayerScene::init() {
     this->addChild(background);
 
     int *pai_ptr = socketConnector.getFrame();
-    log("getframe..");
     for (int i = 0; i < pai_ptr[0] - 2; ++i) {
         auto majiang = MaJiang::create(MaJiangType(pai_ptr[i + 2]));
         majiang->setAnchorPoint(Vec2::ZERO);
@@ -35,27 +34,22 @@ bool MaJiangMultiPlayerScene::init() {
         allMaJiang.pushBack(majiang);
     }
     delete[] pai_ptr;
-    log("host start...");
 
     bool isHost = socketConnector.getIsHost();
     if (isHost) {
         isMyTurn = true;
         for (int k = 0; k < 13; ++k) {
-            auto majiang = allMaJiang.consume();
-            hostPlayer.mopai(majiang);
+            hostPlayer.mopai(allMaJiang.consume());
         }
         for (int i = 0; i < 12; ++i) {
-            auto majiang = allMaJiang.consume();
-            oppoPlayer.mopai(majiang);
+            oppoPlayer.mopai(allMaJiang.consume());
         }
     } else {
         for (int k = 0; k < 13; ++k) {
-            auto majiang = allMaJiang.consume();
-            oppoPlayer.mopai(majiang);
+            oppoPlayer.mopai(allMaJiang.consume());
         }
         for (int i = 0; i < 12; ++i) {
-            auto majiang = allMaJiang.consume();
-            hostPlayer.mopai(majiang);
+            hostPlayer.mopai(allMaJiang.consume());
         }
     }
 
@@ -69,7 +63,6 @@ bool MaJiangMultiPlayerScene::init() {
     oppoPlayer.display();
 
     initMenu();
-    log("init...");
 
     return true;
 }
@@ -118,13 +111,12 @@ void MaJiangMultiPlayerScene::initMenu() {
 
 //多人游戏主流程
 void MaJiangMultiPlayerScene::chupaiProcess(const Vec2 &location) { //事件处理已经保证了轮到我出牌才会进入这个函数
-    log("process...");
     if (hostPlayer.chupai(location)) {
-        isMyTurn = false;
         int frame[] = {3, MaJiangCommand::CHUPAI, hostPlayer.getLastOutType()};
         socketConnector.putFrame(frame);
 
         hostPlayer.display();
+        isMyTurn = false;
     }
 }
 
@@ -132,11 +124,86 @@ void MaJiangMultiPlayerScene::doReadOppo() {
     while (true) {
         if (!isMyTurn) {
             int *frame = socketConnector.getFrame();
-            if (frame[1] == MaJiangCommand::CHUPAI) {
-                oppoPlayer.chupai(MaJiangType(frame[2]));
-                isMyTurn = true;
+            if (frame[1] == MaJiangCommand::MOPAI) {
+                oppoPlayer.mopai(allMaJiang.consume());
+                oppoPlayer.sort();
                 oppoPlayer.display();
+            } else if (frame[1] >= MaJiangCommand::CHUPAI && frame[1] <= MaJiangCommand::GANG) {
+                switch (frame[1]) {
+                    case MaJiangCommand::CHUPAI:
+                        oppoPlayer.chupai(MaJiangType(frame[2]));
+                        break;
+                    case MaJiangCommand::CHI:
+                        oppoPlayer.chi(hostPlayer.popLastOutMaJiang(), frame[2]);
+                        break;
+                    case MaJiangCommand::PENG:
+                        oppoPlayer.peng(hostPlayer.popLastOutMaJiang());
+                        break;
+                    case MaJiangCommand::GANG:
+                        oppoPlayer.gang(hostPlayer.popLastOutMaJiang());
+                        break;
+                    default:
+                        break;
+                }
+                if (frame[1] != MaJiangCommand::CHUPAI) {//如果对面不是出牌,那么不能检测是否可以吃碰杠
+                    oppoPlayer.sort();
+                    oppoPlayer.display();
+                    hostPlayer.sort();
+                    hostPlayer.display();
+
+                    delete[] frame;
+                    continue;
+                }
+                //如果是吃碰杠还需要出一张牌,否则摸牌
+                if (frame[1] >= CHI && frame[1] <= GANG) {
+                    delete[] frame;
+                    frame = socketConnector.getFrame();
+                    assert(frame[1] == MaJiangCommand::CHUPAI);
+                    oppoPlayer.chupai(MaJiangType(frame[2]));
+                }
+                oppoPlayer.sort();
+                oppoPlayer.display();
+
+                //判断是否可以吃胡碰杠
+                bool isGang, isPeng, isChi, isHu;
+                isChi = hostPlayer.isChi(oppoPlayer.getLastOutType()) != 0;
+                isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());
+                isGang = hostPlayer.isGang(oppoPlayer.getLastOutType());
+                isHu = hostPlayer.isHupai(oppoPlayer.getLastOutType());
+                bool setMenuItemHelper[] = {isChi, isPeng, isGang, isHu};
+
+                if (isHu || isChi || isGang || isPeng) {
+                    menuEnable = true;
+
+                    auto menu = this->getChildByTag(MenuItemTag::MENU);
+
+                    for (int i = 0; i <= HU - CHI; ++i) {
+                        auto item = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag(CHI + i)));
+                        item->setVisible(setMenuItemHelper[i]);
+                        item->setEnabled(setMenuItemHelper[i]);
+                    }
+
+                    auto guo = dynamic_cast<MenuItem *>(menu->getChildByTag(MenuItemTag::GUO));
+                    guo->setVisible(true);
+                    guo->setEnabled(true);
+
+                } else {
+                    //摸牌
+                    auto newMaJiang = allMaJiang.consume();
+                    hostPlayer.mopai(newMaJiang);
+
+                    int mopaiFrame[] = {2, MaJiangCommand::MOPAI};
+                    socketConnector.putFrame(mopaiFrame);
+
+                    tryHuPai(&hostPlayer);
+                }
+                oppoPlayer.sort();
+                oppoPlayer.display();
+                hostPlayer.sort();
+                hostPlayer.display();
+                isMyTurn = true;
             }
+            delete[] frame;
         } else {
             sleep(1);
         }
@@ -147,8 +214,12 @@ void MaJiangMultiPlayerScene::peng(Ref *ref) {
     auto majiang = oppoPlayer.popLastOutMaJiang();
     hostPlayer.peng(majiang);
 
+    int frame[] = {2, MaJiangCommand::PENG};
+    socketConnector.putFrame(frame);
+
     hostPlayer.display();
     oppoPlayer.display();
+
     disableAllChoice();
 }
 
@@ -156,8 +227,12 @@ void MaJiangMultiPlayerScene::gang(Ref *ref) {
     auto majiang = oppoPlayer.popLastOutMaJiang();
     hostPlayer.gang(majiang);
 
+    int frame[] = {2, MaJiangCommand::GANG};
+    socketConnector.putFrame(frame);
+
     hostPlayer.display();
     oppoPlayer.display();
+
     disableAllChoice();
 }
 
@@ -180,6 +255,9 @@ void MaJiangMultiPlayerScene::chi(Ref *ref) {
     if (chiPosition == 1 || chiPosition == 2 || chiPosition == 4) {
         auto mj = oppoPlayer.popLastOutMaJiang();
         hostPlayer.chi(mj);
+
+        int chiFrame[] = {3, MaJiangCommand::CHI, chiPosition};
+        socketConnector.putFrame(chiFrame);
     } else {
         disableAllChoice();
         selectToChi(chiPosition);
@@ -200,6 +278,10 @@ void MaJiangMultiPlayerScene::guo(Ref *ref) {
     //摸牌
     auto newMaJiang = allMaJiang.consume();
     hostPlayer.mopai(newMaJiang);
+
+    int frame[] = {2, MaJiangCommand::MOPAI};
+    socketConnector.putFrame(frame);
+
     hostPlayer.sort();
     hostPlayer.display();
     if (hostPlayer.isHupai()) {
@@ -270,6 +352,9 @@ void MaJiangMultiPlayerScene::chiLeft(Ref *ref) {
     auto mj = oppoPlayer.popLastOutMaJiang();
     hostPlayer.chi(mj, 0b100);
 
+    int frame[] = {3, MaJiangCommand::CHI, 0b100};
+    socketConnector.putFrame(frame);
+
     hostPlayer.display();
     oppoPlayer.display();
     disableAllChoice();
@@ -292,6 +377,9 @@ void MaJiangMultiPlayerScene::chiMiddle(Ref *ref) {
     auto mj = oppoPlayer.popLastOutMaJiang();
     hostPlayer.chi(mj, 0b010);
 
+    int frame[] = {3, MaJiangCommand::CHI, 0b010};
+    socketConnector.putFrame(frame);
+
     hostPlayer.display();
     oppoPlayer.display();
     disableAllChoice();
@@ -300,6 +388,9 @@ void MaJiangMultiPlayerScene::chiMiddle(Ref *ref) {
 void MaJiangMultiPlayerScene::chiRight(Ref *ref) {
     auto mj = oppoPlayer.popLastOutMaJiang();
     hostPlayer.chi(mj, 0b001);
+
+    int frame[] = {3, MaJiangCommand::CHI, 0b001};
+    socketConnector.putFrame(frame);
 
     hostPlayer.display();
     oppoPlayer.display();
@@ -321,10 +412,8 @@ void MaJiangMultiPlayerScene::onExit() {
 
 void MaJiangMultiPlayerScene::onEnterTransitionDidFinish() {
     Node::onEnterTransitionDidFinish();
-    log("enter...");
     readOppoThread = new std::thread(CC_CALLBACK_0(MaJiangMultiPlayerScene::doReadOppo, this));
     readOppoThread->detach();
-    log("enter...");
 }
 
 

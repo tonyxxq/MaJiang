@@ -123,7 +123,7 @@ void MaJiangScene::chupaiProcess(const Vec2 &location) {
         oppoPlayer.sort();
         oppoPlayer.display();
 
-        //判断是否可以胡, 碰，杠
+        //判断是否可以吃胡碰杠
         bool isGang, isPeng, isChi, isHu;
         isChi = hostPlayer.isChi(oppoPlayer.getLastOutType()) != 0;
         isPeng = hostPlayer.isPeng(oppoPlayer.getLastOutType());

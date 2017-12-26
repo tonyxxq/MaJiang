@@ -22,10 +22,8 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
     // 基本ai算法， 能杠则杠， 能碰则碰，能吃则吃, 否则出单牌
     if (mj != nullptr) {
         if (isGang(mj->maJiangType)) {
-            mj->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());
             gang(mj);
         } else if (isPeng(mj->maJiangType)) {
-            mj->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());
             peng(mj);
         } else if (isChi(mj->maJiangType)) {
             mj->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());

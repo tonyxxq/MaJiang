@@ -99,7 +99,7 @@ void Player::chi(MaJiang *mj, int chiPosition) {
     if (position == 0) {
         return;
     }
-    //先只考虑只有一种吃牌情况
+
     mj->setScale(1);
     playerMaJiang.pushBack(mj);
     int startType = BEIMIAN;
