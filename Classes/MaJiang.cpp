@@ -31,3 +31,7 @@ __String MaJiang::getFilePathByType(MaJiangType type) {
     }
     return filename;
 }
+
+void MaJiang::resetTexture() {
+    this->setTexture(getFilePathByType(maJiangType).getCString());
+}

@@ -36,6 +36,8 @@ public:
 
     void eraseObject(MaJiang *object, bool removeAll = false);
 
+    void eraseByType(MaJiangType type);
+
     void display(float y, Direction direction = Direction::UP);
 
     void resetColor(const Color3B &color);

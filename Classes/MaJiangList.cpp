@@ -229,4 +229,11 @@ int MaJiangList::isChi(MaJiangType type) {
     return chiPosition;
 }
 
+void MaJiangList::eraseByType(MaJiangType type) {
+    auto mj = getByType(type);
+    if (mj != nullptr) {
+        eraseObject(mj);
+    }
+}
+
 

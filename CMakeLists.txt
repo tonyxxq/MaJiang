@@ -159,12 +159,14 @@ set(GAME_SRC
         Classes/AppDelegate.cpp
         Classes/MaJiangScene.cpp
         Classes/MaJiang.cpp
+        Classes/MaJiangMultiPlayerScene.cpp
         )
 
 set(GAME_HEADERS
         ${PLATFORM_SPECIFIC_HEADERS}
         Classes/AppDelegate.h
-        Classes/MaJiang.h Classes/MaJiangType.h Classes/MaJiangList.cpp Classes/MaJiangList.h Classes/AIOppoPlayer.cpp Classes/AIOppoPlayer.h Classes/Player.cpp Classes/Player.h Classes/HostPlayer.cpp Classes/HostPlayer.h Classes/HelloScene.cpp Classes/HelloScene.h)
+        Classes/MaJiangCommand.h
+        Classes/MaJiang.h Classes/MaJiangType.h Classes/MaJiangList.cpp Classes/MaJiangList.h Classes/AIOppoPlayer.cpp Classes/AIOppoPlayer.h Classes/Player.cpp Classes/Player.h Classes/HostPlayer.cpp Classes/HostPlayer.h Classes/HelloScene.cpp Classes/HelloScene.h Classes/SocketConnector.cpp Classes/SocketConnector.h Classes/OnLineOppoPlayer.cpp Classes/OnLineOppoPlayer.h)
 
 # add the executable
 if(ANDROID)

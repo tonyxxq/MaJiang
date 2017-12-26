@@ -12,7 +12,7 @@ void AIOppoPlayer::mopai(MaJiang *majiang) {
 }
 
 void AIOppoPlayer::display() {
-    float position = Director::getInstance()->getVisibleSize().height - 112 - POSITION;
+    float position = Director::getInstance()->getVisibleSize().height - 112 - AIOPPO_POSITION;
     playerMaJiang.display(position);
     outPlayerMaJiang.display(position - 94, DOWN); // 94 = 112*0.5 + (150-112)
 }
@@ -48,8 +48,7 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
     }
 
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/chupai.wav");
-    auto texturePath = MaJiang::getFilePathByType(clicked->maJiangType);
-    clicked->setTexture(texturePath.getCString());
+    clicked->resetTexture();
     clicked->setScale(0.5f);
     playerMaJiang.resetColor(Color3B::WHITE);
 

@@ -1,5 +1,6 @@
 #include "HelloScene.h"
 #include "MaJiangScene.h"
+#include "MaJiangMultiPlayerScene.h"
 
 USING_NS_CC;
 
@@ -49,6 +50,9 @@ void HelloScene::PVEMenuCallBack(Ref *ref) {
 }
 
 void HelloScene::PVPMenuCallBack(Ref *ref) {
+    auto scene = MaJiangMultiPlayerScene::createScene();
+    auto reScene = TransitionMoveInB::create(0.5f, scene);
+    Director::getInstance()->replaceScene(reScene);
 }
 
 void HelloScene::exitGameCallBack(Ref *ref) {

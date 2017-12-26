@@ -14,6 +14,7 @@ USING_NS_CC;
 class MaJiang : public Sprite {
 public:
     MaJiangType maJiangType;
+    void resetTexture();
     static MaJiang *create(MaJiangType type);
     static __String getFilePathByType(MaJiangType type);
 

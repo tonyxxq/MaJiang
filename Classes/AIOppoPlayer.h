@@ -8,7 +8,7 @@
 #include "MaJiangList.h"
 #include "Player.h"
 
-#define POSITION 20
+#define AIOPPO_POSITION 20
 
 class AIOppoPlayer : public Player {
 public:
