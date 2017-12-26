@@ -1,3 +1,0 @@
-/home/neild47/cocos2d/MaJiangServer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/neild47/cocos2d/MaJiangServer/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/neild47/cocos2d/MaJiangServer/cmake-build-debug/CMakeFiles/MaJiangServer.dir
