@@ -151,6 +151,14 @@ void Player::pushToPlayerMaJiangList(MaJiang *item, ...) {
 //    va_end(args);
 }
 
+void Player::displayAll() {
+    for (auto &mj : playerMaJiang) {
+        mj->resetTexture();
+    }
+
+    display();
+}
+
 
 
 

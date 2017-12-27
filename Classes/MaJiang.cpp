@@ -35,3 +35,7 @@ __String MaJiang::getFilePathByType(MaJiangType type) {
 void MaJiang::resetTexture() {
     this->setTexture(getFilePathByType(maJiangType).getCString());
 }
+
+void MaJiang::hideTexture() {
+    this->setTexture(getFilePathByType(MaJiangType::BEIMIAN).getCString());
+}

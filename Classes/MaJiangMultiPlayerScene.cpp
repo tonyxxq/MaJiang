@@ -36,19 +36,21 @@ bool MaJiangMultiPlayerScene::init() {
     delete[] pai_ptr;
 
     bool isHost = socketConnector.getIsHost();
+    int numHost = 14;
+    int numOppo = 1;
     if (isHost) {
         isMyTurn = true;
-        for (int k = 0; k < 13; ++k) {
+        for (int k = 0; k < numHost; ++k) {
             hostPlayer.mopai(allMaJiang.consume());
         }
-        for (int i = 0; i < 12; ++i) {
+        for (int i = 0; i < numOppo; ++i) {
             oppoPlayer.mopai(allMaJiang.consume());
         }
     } else {
-        for (int k = 0; k < 13; ++k) {
+        for (int k = 0; k < numHost; ++k) {
             oppoPlayer.mopai(allMaJiang.consume());
         }
-        for (int i = 0; i < 12; ++i) {
+        for (int i = 0; i < numOppo; ++i) {
             hostPlayer.mopai(allMaJiang.consume());
         }
     }
@@ -124,7 +126,13 @@ void MaJiangMultiPlayerScene::doReadOppo() {
     while (true) {
         if (!isMyTurn) {
             int *frame = socketConnector.getFrame();
-            if (frame[1] == MaJiangCommand::MOPAI) {
+            if (frame[1] == MaJiangCommand::HU) {
+                if (frame[0] == 2) {//对方是自摸
+                    tryHuPai(&oppoPlayer, nullptr);
+                } else if (frame[0] == 3) { // 对方是被点炮
+                    tryHuPai(&oppoPlayer, &hostPlayer);
+                }
+            } else if (frame[1] == MaJiangCommand::MOPAI) {
                 oppoPlayer.mopai(allMaJiang.consume());
                 oppoPlayer.sort();
                 oppoPlayer.display();
@@ -195,7 +203,7 @@ void MaJiangMultiPlayerScene::doReadOppo() {
                     int mopaiFrame[] = {2, MaJiangCommand::MOPAI};
                     socketConnector.putFrame(mopaiFrame);
 
-                    tryHuPai(&hostPlayer);
+                    tryHuPai(&hostPlayer, nullptr, true);
                 }
                 oppoPlayer.sort();
                 oppoPlayer.display();
@@ -205,7 +213,7 @@ void MaJiangMultiPlayerScene::doReadOppo() {
             }
             delete[] frame;
         } else {
-            sleep(1);
+            usleep(100000);
         }
     }
 }
@@ -270,7 +278,7 @@ void MaJiangMultiPlayerScene::chi(Ref *ref) {
 }
 
 void MaJiangMultiPlayerScene::hu(Ref *ref) {
-    tryHuPai(&hostPlayer, &oppoPlayer);
+    tryHuPai(&hostPlayer, &oppoPlayer, true);
     disableAllChoice();
 }
 
@@ -300,35 +308,32 @@ void MaJiangMultiPlayerScene::onMouseUp(EventMouse *event) {
     chupaiProcess(location);
 }
 
-bool MaJiangMultiPlayerScene::tryHuPai(Player *player1, Player *player2) {
-    std::function<void(void)> func = [player1]() {//记录数据...
-        auto userDefaule = UserDefault::getInstance();
-        if (typeid(*player1) == typeid(AIOppoPlayer)) {
-            auto score = userDefaule->getIntegerForKey("aiPlayerScore", 0);
-            score++;
-            userDefaule->setIntegerForKey("aiPlayerScore", score);
-        } else {
-            auto score = userDefaule->getIntegerForKey("HostPlayerScore", 0);
-            score++;
-            userDefaule->setIntegerForKey("HostPlayerScore", score);
-        }
-    };
-
+bool MaJiangMultiPlayerScene::tryHuPai(Player *player1, Player *player2, bool isFirst) {
     if (player2 != nullptr) {
         if (player1->isHupai(player2->getLastOutType())) {//被点炮
             auto mj = player2->popLastOutMaJiang();
             mj->setScale(1);
             player1->hupai(mj);
+
+            if (isFirst) {//如果通过对面发来胡牌的消息,那就不需要再将消息发回给对面
+                int huFrame[] = {3, MaJiangCommand::HU, mj->maJiangType};
+                socketConnector.putFrame(huFrame);
+            }
+
             showHuPai();
-            func();
             return true;
         }
     } else {
         if (player1->isHupai()) {//自摸
             auto mj = player1->popLastPlayerMaJiang();
             player1->hupai(mj);
+
+            if (isFirst) {
+                int huFrame[] = {2, MaJiangCommand::HU};
+                socketConnector.putFrame(huFrame);
+            }
+
             showHuPai();
-            func();
             return true;
         }
     }
@@ -338,12 +343,14 @@ bool MaJiangMultiPlayerScene::tryHuPai(Player *player1, Player *player2) {
 void MaJiangMultiPlayerScene::showHuPai() {
     oppoPlayer.sort();
     hostPlayer.sort();
-    oppoPlayer.display();
-    hostPlayer.display();
+    oppoPlayer.displayAll();
+    hostPlayer.displayAll();
 
-    auto hule = Sprite::create("hule.png");
-    hule->setAnchorPoint(Vec2::ZERO);
-    this->addChild(hule);
+    //bug??
+//    auto hule = Sprite::create("hule.png");
+//    hule->setAnchorPoint(Vec2::ZERO);
+//    this->addChild(hule);
+
     Director::getInstance()->getEventDispatcher()->removeAllEventListeners();
     Director::getInstance()->pause();
 }

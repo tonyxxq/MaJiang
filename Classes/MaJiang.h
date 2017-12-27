@@ -15,6 +15,7 @@ class MaJiang : public Sprite {
 public:
     MaJiangType maJiangType;
     void resetTexture();
+    void hideTexture();
     static MaJiang *create(MaJiangType type);
     static __String getFilePathByType(MaJiangType type);
 

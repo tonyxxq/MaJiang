@@ -6,7 +6,7 @@
 
 void AIOppoPlayer::mopai(MaJiang *majiang) {
     if (majiang != nullptr) {
-        majiang->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());
+        majiang->hideTexture();
         playerMaJiang.pushBack(majiang);
     }
 }
@@ -26,7 +26,7 @@ void AIOppoPlayer::chupai(MaJiang *mj) {
         } else if (isPeng(mj->maJiangType)) {
             peng(mj);
         } else if (isChi(mj->maJiangType)) {
-            mj->setTexture(MaJiang::getFilePathByType(MaJiangType::BEIMIAN).getCString());
+            mj->hideTexture();
             chi(mj);
         }
     }

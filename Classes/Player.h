@@ -18,6 +18,8 @@ public:
 
     virtual void display() = 0;
 
+    void displayAll();
+
     void resetColor();
 
     void sort();
@@ -30,13 +32,13 @@ public:
 
     int isChi(MaJiangType type);
 
-    void peng(MaJiang *mj);
+    virtual void peng(MaJiang *mj);
 
-    void gang(MaJiang *mj);
+    virtual void gang(MaJiang *mj);
 
     void hupai(MaJiang *mj);
 
-    void chi(MaJiang *mj, int chiPosition = 0);
+    virtual void chi(MaJiang *mj, int chiPosition = 0);
 
     MaJiangType getLastOutType();
 

@@ -72,11 +72,12 @@ public:
 
     void selectToChi(int chiPosition);
 
-    bool tryHuPai(Player *player1, Player *player2 = nullptr);
+    bool tryHuPai(Player *player1, Player *player2 = nullptr, bool isFirst = false);
 
     void onEnterTransitionDidFinish() override;
 
     void doReadOppo();
+
 };
 
 #endif // __MAJIANG_SCENE_H__

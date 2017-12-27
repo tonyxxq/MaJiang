@@ -16,6 +16,12 @@ public:
     void display() override;
 
     void chupai(MaJiangType mjt = BEIMIAN);
+
+    void chi(MaJiang *mj, int chiPosition) override;
+
+    void peng(MaJiang *mj) override;
+
+    void gang(MaJiang *mj) override;
 };
 
 
