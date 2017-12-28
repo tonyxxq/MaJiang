@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <cstdint>
 #include <thread>
 #include <vector>
@@ -13,6 +12,7 @@
 #include <iostream>
 #include "MaJiangType.h"
 #include "MaJiangCommand.h"
+#include <poll.h>
 
 /**
  *          消息的基本单位是int型
@@ -28,32 +28,6 @@
 #define FRAME_DATA_POSITION 2
 
 using namespace std;
-
-int consumeMaJiang(vector<MaJiangType> &majiangs, int &consumeMaJiangPosition) {
-    return majiangs[consumeMaJiangPosition++];
-}
-
-void do_host(int hostfd, int oppofd) {
-    int buf[512];
-    while (true) {
-        if (read(hostfd, buf, sizeof(int)) <= 0) break;
-        read(hostfd, &buf[1], (buf[0] - 1) * sizeof(int));
-        write(oppofd, buf, sizeof(int) * buf[0]);
-    }
-    close(hostfd);
-    close(oppofd);
-}
-
-void do_oppo(int hostfd, int oppofd) {
-    int buf[512];
-    while (true) {
-        if (read(oppofd, buf, sizeof(int)) <= 0) break;
-        read(oppofd, &buf[1], (buf[0] - 1) * sizeof(int));
-        write(hostfd, buf, sizeof(int) * buf[0]);
-    }
-    close(hostfd);
-    close(oppofd);
-}
 
 void do_work(int *cfd) {
     vector<MaJiangType> majiangs;
@@ -92,63 +66,33 @@ void do_work(int *cfd) {
     mjs[2] = 0;
     write(oppo_fd, mjs, sizeof(int) * (mjs[0]));
 
-    auto host_thread = std::thread(do_host, host_fd, oppo_fd);
-    host_thread.detach();
-    auto oppo_thread = std::thread(do_oppo, host_fd, oppo_fd);
-    oppo_thread.detach();
-}
+    struct pollfd fds[2];
+    fds[0].fd = host_fd;
+    fds[0].events = POLLRDNORM;
 
-void do_work1(int *cfd) {
-    vector<MaJiangType> majiangs;
-    int consumeMaJiangPosition = 0;
-    int turn = 0;
+    fds[1].fd = oppo_fd;
+    fds[1].events = POLLRDNORM;
 
-    //初始化麻将
-    for (int i = WAN_1; i <= HONGZHONG; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            majiangs.push_back(MaJiangType(i));
+
+    for (;;) {
+        if (poll(fds, 2, -1) <= 0) {
+            continue;
+        }
+
+        if (fds[0].revents & POLLRDNORM) {
+            if (read(host_fd, mjs, sizeof(int)) <= 0) break;
+            read(host_fd, &mjs[1], (mjs[0] - 1) * sizeof(int));
+            write(oppo_fd, mjs, sizeof(int) * mjs[0]);
+        }
+
+        if (fds[1].revents & POLLRDNORM) {
+            if (read(oppo_fd, mjs, sizeof(int)) <= 0) break;
+            read(oppo_fd, &mjs[1], (mjs[0] - 1) * sizeof(int));
+            write(host_fd, mjs, sizeof(int) * mjs[0]);
         }
     }
-    long seed = std::time(nullptr);
-    std::shuffle(majiangs.begin(), majiangs.end(), std::default_random_engine(seed));
-
-    int host_fd = cfd[turn];
-    int oppo_fd = cfd[1 - turn];
-
-    char buf[1024];
-    int pai[512];
-
-    auto consume = std::bind(&consumeMaJiang, majiangs, consumeMaJiangPosition);
-    pai[FRAME_LEN_POSITION] = 16;
-    pai[FRAME_CMD_POSITION] = MOPAI;
-    for (int k = FRAME_DATA_POSITION; k < FRAME_DATA_POSITION + 14; ++k) {
-        pai[k] = consume();
-    }
-    write(host_fd, pai, (pai[0]) * sizeof(int));
-
-
-    pai[FRAME_LEN_POSITION] = 15;
-    pai[FRAME_CMD_POSITION] = MOPAI;
-    for (int k = FRAME_DATA_POSITION; k < FRAME_DATA_POSITION + 13; ++k) {
-        pai[k] = consume();
-    }
-    write(oppo_fd, pai, (pai[0]) * sizeof(int));
-
-    while (true) {
-        ssize_t len = read(host_fd, buf, sizeof(buf));
-        if (len <= 0) break;
-        buf[len] = 0;
-        write(oppo_fd, buf, strlen(buf));
-
-        len = read(oppo_fd, buf, sizeof(buf));
-        if (len <= 0) break;
-        buf[len] = 0;
-        write(host_fd, buf, strlen(buf));;
-    }
-
-    close(host_fd);
-    close(oppo_fd);
 }
+
 
 int main(int argc, char *argv[]) {
     int serverfd;
@@ -186,5 +130,6 @@ int main(int argc, char *argv[]) {
         std::thread t(do_work, clientfds);
         t.detach();
     }
+
     return 0;
 }
