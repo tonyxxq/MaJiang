@@ -138,9 +138,9 @@ bool MaJiangList::checkSequenceAndTriplet(int *pai) {
 
     for (i = 1; i <= HONGZHONG; ++i) {
         bool sequenceWan = i >= WAN_1 && (i + 2) <= WAN_9 && pai[i] >= 1 && pai[i + 1] >= 1 && pai[i + 2] >= 1;
-        bool sequenceTong = i >= TONG_1 && (i + 2) <= TONG_9 && pai[i] >= 1 && pai[i + 1] >= 1 && pai[i + 2] >= 1;
-        bool sequenceTiao = i >= TIAO_1 && (i + 2) <= TIAO_9 && pai[i] >= 1 && pai[i + 1] >= 1 && pai[i + 2] >= 1;
-        if (sequenceWan || sequenceTong || sequenceTiao) { //顺子
+//         bool sequenceTong = i >= TONG_1 && (i + 2) <= TONG_9 && pai[i] >= 1 && pai[i + 1] >= 1 && pai[i + 2] >= 1;
+//         bool sequenceTiao = i >= TIAO_1 && (i + 2) <= TIAO_9 && pai[i] >= 1 && pai[i + 1] >= 1 && pai[i + 2] >= 1;
+        if (sequenceWan /*|| sequenceTong || sequenceTiao*/) { //顺子
             pai[i]--;
             pai[i + 1]--;
             pai[i + 2]--;
@@ -210,18 +210,18 @@ int MaJiangList::isChi(MaJiangType type) {
         pai[mj->maJiangType]++;
     }
 
-    if ((type >= WAN_1 && type + 2 <= WAN_9 || type >= TONG_1 && type + 2 <= TONG_9 ||
-         type >= TIAO_1 && type + 2 <= TIAO_9)
+    if ((type >= WAN_1 && type + 2 <= WAN_9 /*|| type >= TONG_1 && type + 2 <= TONG_9 ||
+         type >= TIAO_1 && type + 2 <= TIAO_9*/)
         && pai[type + 1] >= 1 && pai[type + 2] >= 1) { //011
         chiPosition |= 0b100;
     }
-    if ((type + 1 <= WAN_9 && type - 1 >= WAN_1 || type + 1 <= TONG_9 && type - 1 >= TONG_1 ||
-         type + 1 <= TIAO_9 && type - 1 >= TIAO_1)
+    if ((type + 1 <= WAN_9 && type - 1 >= WAN_1 /*|| type + 1 <= TONG_9 && type - 1 >= TONG_1 ||
+         type + 1 <= TIAO_9 && type - 1 >= TIAO_1*/)
         && pai[type - 1] >= 1 && pai[type + 1] >= 1) {//101
         chiPosition |= 0b010;
     }
-    if ((type - 2 >= WAN_1 && type <= WAN_9 || type - 2 >= TONG_1 && type <= TONG_9 ||
-         type - 2 >= TIAO_1 && type <= TIAO_9)
+    if ((type - 2 >= WAN_1 && type <= WAN_9 /*|| type - 2 >= TONG_1 && type <= TONG_9 ||
+         type - 2 >= TIAO_1 && type <= TIAO_9*/)
         && pai[type - 2] >= 1 && pai[type - 1] >= 1) { //110
         chiPosition |= 0b001;
     }

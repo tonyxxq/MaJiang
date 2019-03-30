@@ -20,11 +20,11 @@ __String MaJiang::getFilePathByType(MaJiangType type) {
     __String filename("");
     if (type >= WAN_1 && type <= WAN_9) {
         filename.initWithFormat("majiang/m%d.png", type);
-    } else if (type >= TONG_1 && type <= TONG_9) {
+    } else if /*(type >= TONG_1 && type <= TONG_9) {
         filename.initWithFormat("majiang/p%d.png", type - TONG_1 + 1);
     } else if (type >= TIAO_1 && type <= TIAO_9) {
         filename.initWithFormat("majiang/s%d.png", type - TIAO_1 + 1);
-    } else if (type >= DONGFENG && type <= HONGZHONG) {
+    } else if */(type >= DONGFENG && type <= HONGZHONG) {
         filename.initWithFormat("majiang/z%d.png", type - DONGFENG + 1);
     } else {
         filename.initWithFormat("majiang/pai.png");

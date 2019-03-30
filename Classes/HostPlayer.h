@@ -6,7 +6,7 @@
 #define MYGAME_HOSTPLAYER_H
 
 #include "Player.h"
-#define PLAYER1_MAJIANGS_POSITTION 20
+#define PLAYER1_MAJIANGS_POSITTION 180
 
 class HostPlayer : public Player{
 public:

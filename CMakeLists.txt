@@ -30,6 +30,7 @@ set(APP_NAME MyGame)
 project (${APP_NAME})
 
 set(COCOS2D_ROOT ${CMAKE_SOURCE_DIR}/cocos2d)
+set(LINUX TRUE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${COCOS2D_ROOT}/cmake/Modules/")
 include(CocosBuildHelpers)
